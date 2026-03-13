@@ -1,0 +1,42 @@
+import { Outlet, useLocation } from 'react-router-dom'
+import Sidebar from '../Sidebar/Sidebar'
+
+const PAGE_TITLES = {
+  '/dashboard':         { title: 'Dashboard',       sub: 'Visão geral do sistema' },
+  '/funcionarios':      { title: 'Funcionários',     sub: 'Gestão de colaboradores' },
+  '/funcionarios/novo': { title: 'Novo Funcionário', sub: 'Cadastro de colaborador' },
+  '/setores':           { title: 'Setores',          sub: 'Gestão de departamentos' },
+  '/setores/novo':      { title: 'Novo Setor',       sub: 'Cadastro de setor' },
+  '/empresa':           { title: 'Perfil da Empresa',sub: 'Informações da sua empresa' },
+}
+
+export default function Layout() {
+  const { pathname } = useLocation()
+
+  const findTitle = () => {
+    // Verifica path exato ou prefixos como /funcionarios/edit/3
+    for (const [path, meta] of Object.entries(PAGE_TITLES)) {
+      if (pathname === path || pathname.startsWith(path + '/')) return meta
+    }
+    return { title: 'GestãoRH', sub: '' }
+  }
+
+  const { title, sub } = findTitle()
+
+  return (
+    <div className="app-layout">
+      <Sidebar />
+      <div className="app-main">
+        <header className="topbar">
+          <div className="topbar-title">
+            {title}
+            {sub && <span className="topbar-sub ms-2">— {sub}</span>}
+          </div>
+        </header>
+        <main className="app-content">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  )
+}
