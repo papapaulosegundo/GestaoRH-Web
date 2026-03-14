@@ -1,18 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import Layout        from './components/Layout/Layout'
-import AuthPage      from './pages/Auth/AuthPage'
-import Dashboard     from './pages/Dashboard/Dashboard'
-import FuncionariosListagem from './pages/Funcionarios/index'
-import FuncionarioForm      from './pages/Funcionarios/FuncionarioForm'
-import SetoresListagem      from './pages/Setores/index'
-import SetorForm            from './pages/Setores/SetorForm'
-import PerfilEmpresa        from './pages/Empresa/PerfilEmpresa'
+import Layout from './components/Layout/Layout'
+import AuthPage from './pages/Auth/Login'
+import Dashboard from './pages/Dashboard/Dashboard'
+import Funcionarios from './pages/Funcionarios/Funcionarios'
+import FuncionarioEdit from './pages/Funcionarios/FuncionarioEdit'
+import Setores from './pages/Setores/Setores'
+import SetorEdit from './pages/Setores/SetorEdit'
+import PerfilEmpresa from './pages/Empresa/PerfilEmpresa'
 
-// Rota protegida — redireciona para / se não estiver logado
 function PrivateRoute({ children }) {
   const { empresa, loading } = useAuth()
   if (loading) return (
@@ -23,7 +21,6 @@ function PrivateRoute({ children }) {
   return empresa ? children : <Navigate to="/" replace />
 }
 
-// Rota pública — redireciona para /dashboard se já estiver logado
 function PublicRoute({ children }) {
   const { empresa, loading } = useAuth()
   if (loading) return null
@@ -33,41 +30,22 @@ function PublicRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Página pública: Login + Cadastro */}
-      <Route
-        path="/"
-        element={
-          <PublicRoute>
-            <AuthPage />
-          </PublicRoute>
-        }
-      />
+      <Route path="/" element={<PublicRoute><AuthPage /></PublicRoute>} />
 
-      {/* Área protegida: com sidebar */}
-      <Route
-        element={
-          <PrivateRoute>
-            <Layout />
-          </PrivateRoute>
-        }
-      >
-        <Route path="/dashboard"              element={<Dashboard />} />
+      <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
+        <Route path="/dashboard" element={<Dashboard />} />
 
-        {/* Funcionários */}
-        <Route path="/funcionarios"           element={<FuncionariosListagem />} />
-        <Route path="/funcionarios/novo"      element={<FuncionarioForm />} />
-        <Route path="/funcionarios/editar/:id" element={<FuncionarioForm />} />
+        <Route path="/funcionarios" element={<Funcionarios />} />
+        <Route path="/funcionarios/novo" element={<FuncionarioEdit />} />
+        <Route path="/funcionarios/editar/:id" element={<FuncionarioEdit />} />
 
-        {/* Setores */}
-        <Route path="/setores"               element={<SetoresListagem />} />
-        <Route path="/setores/novo"          element={<SetorForm />} />
-        <Route path="/setores/editar/:id"    element={<SetorForm />} />
+        <Route path="/setores" element={<Setores />} />
+        <Route path="/setores/novo" element={<SetorEdit />} />
+        <Route path="/setores/editar/:id" element={<SetorEdit />} />
 
-        {/* Perfil empresa */}
-        <Route path="/empresa"              element={<PerfilEmpresa />} />
+        <Route path="/empresa" element={<PerfilEmpresa />} />
       </Route>
 
-      {/* Rota não encontrada */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
@@ -85,11 +63,7 @@ export default function App() {
           newestOnTop
           closeOnClick
           pauseOnHover
-          toastStyle={{
-            fontFamily: 'var(--font-body)',
-            fontSize: 14,
-            borderRadius: 10,
-          }}
+          toastStyle={{ fontFamily: 'var(--font-body)', fontSize: 14, borderRadius: 10 }}
         />
       </AuthProvider>
     </BrowserRouter>

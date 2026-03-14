@@ -2,11 +2,11 @@ import api from './api'
 
 // ── Empresa ────────────────────────────────────────────────
 export const empresaService = {
-  cadastrar:  (data) => api.post('/empresa/cadastrar', data),
-  login:      (data) => api.post('/empresa/login', data),
-  obterPorId: (id)   => api.get(`/empresa/${id}`),
+  cadastrar:  (data)     => api.post('/empresa/cadastrar', data),
+  login:      (data)     => api.post('/empresa/login', data),
+  obterPorId: (id)       => api.get(`/empresa/${id}`),
   atualizar:  (id, data) => api.put(`/empresa/${id}`, data),
-  listar:     ()     => api.get('/empresa'),
+  listar:     ()         => api.get('/empresa'),
 }
 
 // ── Setor ──────────────────────────────────────────────────

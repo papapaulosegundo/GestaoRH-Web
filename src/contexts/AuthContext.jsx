@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
   const login = (empresaData, jwt) => {
     setEmpresa(empresaData)
     setToken(jwt)
-    localStorage.setItem('rh_token',  jwt)
+    localStorage.setItem('rh_token',   jwt)
     localStorage.setItem('rh_empresa', JSON.stringify(empresaData))
   }
 
@@ -44,3 +44,12 @@ export function AuthProvider({ children }) {
 }
 
 export const useAuth = () => useContext(AuthContext)
+
+// HOC para Class Components consumirem o AuthContext
+import React from 'react'
+export function withAuth(Component) {
+  return function ComponentWithAuth(props) {
+    const auth = useAuth()
+    return <Component {...props} auth={auth} />
+  }
+}
