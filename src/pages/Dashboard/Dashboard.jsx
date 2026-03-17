@@ -2,25 +2,26 @@ import { Component } from 'react'
 import { Card } from 'react-bootstrap'
 import { withRouter } from '../../common/withRouter'
 import { PageHeader } from '../../common/_components'
+import { BiGroup, BiFileBlank, BiRocket, BiPencil, BiGitBranch } from 'react-icons/bi'
 import api from '../../services/api'
+import { FaPencilAlt } from 'react-icons/fa'
 
 const STAT_CARDS = [
-  { key: 'funcionarios', icon: 'bi-people-fill', label: 'Funcionários ativos', color: '#DBEAFE', iconColor: '#2563EB', link: '/funcionarios' },
-  { key: 'setores', icon: 'bi-diagram-3-fill', label: 'Setores cadastrados', color: '#D1FAE5', iconColor: '#10B981', link: '/setores' },
-  { key: null, icon: 'bi-file-earmark-text', label: 'Documentos', color: '#FEF3C7', iconColor: '#F59E0B', disabled: true },
-  { key: null, icon: 'bi-pen', label: 'Assinaturas', color: '#EDE9FE', iconColor: '#7C3AED', disabled: true },
+  { key: 'funcionarios', Icon: BiGroup, label: 'Funcionários ativos', color: '#DBEAFE', iconColor: '#2563EB', link: '/funcionarios' },
+  { key: 'setores', Icon: BiGitBranch, label: 'Setores ativos', color: '#D1FAE5', iconColor: '#10B981', link: '/setores' },
+  { key: null, Icon: BiFileBlank, label: 'Documentos', color: '#FEF3C7', iconColor: '#F59E0B', disabled: true },
+  { key: null, Icon: FaPencilAlt, label: 'Assinaturas', color: '#EDE9FE', iconColor: '#7C3AED', disabled: true },
 ]
 
 class Dashboard extends Component {
   state = { funcionarios: 0, setores: 0 }
 
   componentDidMount() {
-    api.get('/funcionario')
-      .then(res => this.setState({ funcionarios: res.data.length }))
-      .catch(() => {})
-
-    api.get('/setor')
-      .then(res => this.setState({ setores: res.data.length }))
+    Promise.all([api.get('/funcionario'), api.get('/setor')])
+      .then(([f, s]) => this.setState({
+        funcionarios: f.data.filter(x => x.ativo).length,
+        setores: s.data.length
+      }))
       .catch(() => {})
   }
 
@@ -31,14 +32,11 @@ class Dashboard extends Component {
 
         <div className="stat-grid">
           {STAT_CARDS.map(c => (
-            <div
-              key={c.label}
-              className="stat-card"
+            <div key={c.label} className="stat-card"
               style={{ cursor: c.disabled ? 'default' : 'pointer' }}
-              onClick={() => !c.disabled && this.props.router.navigate(c.link)}
-            >
+              onClick={() => !c.disabled && this.props.router.navigate(c.link)}>
               <div className="stat-icon" style={{ background: c.color }}>
-                <i className={`bi ${c.icon}`} style={{ color: c.iconColor }} />
+                <c.Icon size={20} color={c.iconColor} />
               </div>
               <div className="stat-value">{c.key ? this.state[c.key] : '—'}</div>
               <div className="stat-label">{c.label}</div>
@@ -50,9 +48,9 @@ class Dashboard extends Component {
         <Card className="card-rh">
           <Card.Body className="card-rh-body">
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
-              <i className="bi bi-rocket-takeoff" style={{ fontSize: 36, color: 'var(--primary)', display: 'block', marginBottom: 12 }} />
+              <BiRocket size={36} color="var(--primary)" style={{ display: 'block', margin: '0 auto 12px' }} />
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, color: 'var(--gray-800)', marginBottom: 8 }}>
-                Sistema em construção ...
+                Sistema em construção 🚀
               </div>
               <div style={{ fontSize: 14, color: 'var(--gray-500)', maxWidth: 400, margin: '0 auto' }}>
                 Os módulos de documentos, assinaturas eletrônicas e notificações estão sendo desenvolvidos.

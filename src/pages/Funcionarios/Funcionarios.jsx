@@ -3,41 +3,41 @@ import { Row, Col, Card, Table, Button, Form, Spinner } from 'react-bootstrap'
 import { toast } from 'react-toastify'
 import { withRouter } from '../../common/withRouter'
 import { PageHeader, EmptyState, ConfirmModal, TableFooter } from '../../common/_components'
+import {
+  BiSearch, BiX, BiPlus, BiPencil, BiTrash,
+  BiGroup, BiCheckCircle, BiXCircle
+} from 'react-icons/bi'
 import { TURNO_LABEL, GENERO_LABEL, TURNO_BADGE } from '../../common/utils'
 import api from '../../services/api'
 
 class Funcionarios extends Component {
   state = {
-    funcionarios: [],
-    setores: [],
-    loading: true,
+    funcionarios:  [],
+    setores:       [],
+    loading:       true,
     confirmDelete: null,
-    filtroNome: '',
-    filtroSetor: '',
-    filtroTurno: '',
-    filtroGenero: '',
+    filtroNome:    '',
+    filtroSetor:   '',
+    filtroTurno:   '',
+    filtroGenero:  '',
+    filtroAtivo:   '',   // '' = todos | 'true' = ativos | 'false' = inativos
   }
 
-  componentDidMount() {
-    this.carregarDados()
-  }
+  componentDidMount() { this.carregarDados() }
 
   carregarDados = () => {
     this.setState({ loading: true })
-
-    // GET /api/funcionario
+    // GET /api/funcionario — retorna TODOS (ativos + inativos)
     api.get('/funcionario')
       .then(res => this.setState({ funcionarios: res.data }))
       .catch(() => toast.error('Erro ao carregar funcionários.'))
       .finally(() => this.setState({ loading: false }))
 
-    // GET /api/setor (para o filtro de setor)
     api.get('/setor')
       .then(res => this.setState({ setores: res.data }))
       .catch(() => {})
   }
 
-  // DELETE /api/funcionario/{id}
   handleDesativar = (id) => {
     api.delete(`/funcionario/${id}`)
       .then(() => {
@@ -49,41 +49,35 @@ class Funcionarios extends Component {
   }
 
   limparFiltros = () => {
-    this.setState({ filtroNome: '', filtroSetor: '', filtroTurno: '', filtroGenero: '' })
+    this.setState({ filtroNome: '', filtroSetor: '', filtroTurno: '', filtroGenero: '', filtroAtivo: '' })
   }
 
-  handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value })
-  }
+  handleChange = (e) => { this.setState({ [e.target.name]: e.target.value }) }
 
   getFiltrados() {
-    const { funcionarios, filtroNome, filtroSetor, filtroTurno, filtroGenero } = this.state
+    const { funcionarios, filtroNome, filtroSetor, filtroTurno, filtroGenero, filtroAtivo } = this.state
     return funcionarios.filter(f => {
       const nomeOk   = !filtroNome   || f.nome.toLowerCase().includes(filtroNome.toLowerCase())
       const setorOk  = !filtroSetor  || String(f.setorId) === filtroSetor
       const turnoOk  = !filtroTurno  || f.turno === filtroTurno
       const generoOk = !filtroGenero || f.genero === filtroGenero
-      return nomeOk && setorOk && turnoOk && generoOk
+      const ativoOk  = filtroAtivo === '' || String(f.ativo) === filtroAtivo
+      return nomeOk && setorOk && turnoOk && generoOk && ativoOk
     })
   }
 
   renderRows(filtrados) {
     if (filtrados.length === 0) {
       return (
-        <tr>
-          <td colSpan={9}>
-            <EmptyState
-              icon="bi-people"
-              title="Nenhum funcionário encontrado"
-              description="Ajuste os filtros ou adicione um novo colaborador."
-            />
-          </td>
-        </tr>
+        <tr><td colSpan={10}>
+          <EmptyState icon={BiGroup} title="Nenhum funcionário encontrado"
+            description="Ajuste os filtros ou adicione um novo colaborador." />
+        </td></tr>
       )
     }
 
     return filtrados.map(f => (
-      <tr key={f.id}>
+      <tr key={f.id} style={{ opacity: f.ativo ? 1 : 0.55 }}>
         <td style={{ color: 'var(--gray-400)', fontSize: 12 }}>#{f.id}</td>
         <td>
           <div style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{f.nome}</div>
@@ -101,6 +95,12 @@ class Funcionarios extends Component {
           {GENERO_LABEL[f.genero] ?? f.genero}
         </td>
         <td>
+          <span className={`badge-rh ${f.ativo ? 'badge-active' : 'badge-inactive'}`}>
+            {f.ativo ? <BiCheckCircle className="me-1" /> : <BiXCircle className="me-1" />}
+            {f.ativo ? 'Ativo' : 'Inativo'}
+          </span>
+        </td>
+        <td>
           <code style={{ fontSize: 12, background: 'var(--gray-100)', padding: '3px 8px', borderRadius: 6, color: 'var(--primary-dark)' }}>
             {f.senhaTemporaria}
           </code>
@@ -108,12 +108,14 @@ class Funcionarios extends Component {
         <td>
           <Button variant="light" size="sm" className="btn-edit-rh me-1"
             onClick={() => this.props.router.navigate(`/funcionarios/editar/${f.id}`)}>
-            <i className="bi bi-pencil" />
+            <BiPencil />
           </Button>
-          <Button variant="danger" size="sm" className="btn-danger-rh"
-            onClick={() => this.setState({ confirmDelete: f })}>
-            <i className="bi bi-trash" />
-          </Button>
+          {f.ativo && (
+            <Button variant="danger" size="sm" className="btn-danger-rh"
+              onClick={() => this.setState({ confirmDelete: f })}>
+              <BiTrash />
+            </Button>
+          )}
         </td>
       </tr>
     ))
@@ -121,7 +123,7 @@ class Funcionarios extends Component {
 
   render() {
     const { loading, setores, confirmDelete,
-            filtroNome, filtroSetor, filtroTurno, filtroGenero,
+            filtroNome, filtroSetor, filtroTurno, filtroGenero, filtroAtivo,
             funcionarios } = this.state
     const filtrados = this.getFiltrados()
 
@@ -133,25 +135,24 @@ class Funcionarios extends Component {
           action={
             <Button className="btn-primary-rh"
               onClick={() => this.props.router.navigate('/funcionarios/novo')}>
-              <i className="bi bi-plus-lg" /> Adicionar Funcionário
+              <BiPlus className="me-1" /> Adicionar Funcionário
             </Button>
           }
         />
 
-        {/* Filtros */}
         <Card className="filter-bar mb-3">
           <Card.Body>
             <div className="filter-bar-title">Filtros</div>
             <Row className="g-3">
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Label className="form-label-rh">Nome</Form.Label>
                 <div className="input-icon-wrap">
-                  <i className="bi bi-search" />
+                  <BiSearch size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)', pointerEvents: 'none' }} />
                   <Form.Control className="form-control-rh" placeholder="Buscar por nome..."
                     name="filtroNome" value={filtroNome} onChange={this.handleChange} />
                 </div>
               </Col>
-              <Col md={3}>
+              <Col md={2}>
                 <Form.Label className="form-label-rh">Setor</Form.Label>
                 <Form.Select className="form-control-rh" name="filtroSetor"
                   value={filtroSetor} onChange={this.handleChange}>
@@ -179,17 +180,25 @@ class Funcionarios extends Component {
                   <option value="sem_genero">Não informado</option>
                 </Form.Select>
               </Col>
+              <Col md={2}>
+                <Form.Label className="form-label-rh">Status</Form.Label>
+                <Form.Select className="form-control-rh" name="filtroAtivo"
+                  value={filtroAtivo} onChange={this.handleChange}>
+                  <option value="">Todos</option>
+                  <option value="true">Ativos</option>
+                  <option value="false">Inativos</option>
+                </Form.Select>
+              </Col>
               <Col md={1} className="d-flex align-items-end">
                 <Button variant="light" className="btn-ghost-rh w-100"
                   onClick={this.limparFiltros} title="Limpar">
-                  <i className="bi bi-x-lg" />
+                  <BiX />
                 </Button>
               </Col>
             </Row>
           </Card.Body>
         </Card>
 
-        {/* Tabela */}
         <Card className="card-rh">
           <Card.Body className="p-0">
             {loading ? (
@@ -202,7 +211,8 @@ class Funcionarios extends Component {
                   <tr>
                     <th>ID</th><th>Nome</th><th>CPF</th><th>Email</th>
                     <th>Setor</th><th>Turno</th><th>Gênero</th>
-                    <th>Senha Temp.</th><th style={{ width: 120 }}>Ações</th>
+                    <th>Status</th><th>Senha Temp.</th>
+                    <th style={{ width: 100 }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>{this.renderRows(filtrados)}</tbody>
@@ -218,7 +228,7 @@ class Funcionarios extends Component {
           onConfirm={() => this.handleDesativar(confirmDelete.id)}
           title="Desativar funcionário"
           confirmLabel="Desativar"
-          confirmIcon="bi-trash"
+          ConfirmIcon={BiTrash}
         >
           <p style={{ color: 'var(--gray-600)', fontSize: 14 }}>
             Tem certeza que deseja desativar <strong>{confirmDelete?.nome}</strong>?

@@ -3,27 +3,31 @@ import { Card, Form, Button, Spinner } from 'react-bootstrap'
 import { toast } from 'react-toastify'
 import { withRouter } from '../../common/withRouter'
 import { PageHeader, LoadingSpinner, FormField } from '../../common/_components'
+import { BiArrowBack, BiCheck, BiPlus } from 'react-icons/bi'
 import api from '../../services/api'
 
 class SetorEdit extends Component {
   state = {
-    nome: '',
-    descricao: '',
-    loading: false,
+    nome:        '',
+    descricao:   '',
+    ativo:       true,
+    loading:     false,
     loadingData: false,
   }
 
   get isEdit() { return !!this.props.router.params.id }
-  get id() { return this.props.router.params.id }
+  get id()     { return this.props.router.params.id }
 
   componentDidMount() {
     if (!this.isEdit) return
-
     this.setState({ loadingData: true })
-
-    // GET /api/setor/{id}
     api.get(`/setor/${this.id}`)
-      .then(res => this.setState({ nome: res.data.nome, descricao: res.data.descricao, loadingData: false }))
+      .then(res => this.setState({
+        nome:        res.data.nome,
+        descricao:   res.data.descricao,
+        ativo:       res.data.ativo,
+        loadingData: false,
+      }))
       .catch(() => {
         toast.error('Setor não encontrado.')
         this.props.router.navigate('/setores')
@@ -31,56 +35,44 @@ class SetorEdit extends Component {
   }
 
   handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value })
+    const { name, value, type, checked } = e.target
+    this.setState({ [name]: type === 'checkbox' ? checked : value })
   }
 
-  // POST /api/setor  ou  PUT /api/setor/{id}
   enviaRegistro = (e) => {
     e.preventDefault()
-    const { nome, descricao } = this.state
-
+    const { nome, descricao, ativo } = this.state
     if (!nome || nome.length < 2) return toast.error('Nome deve ter mínimo 2 caracteres.')
 
-    const payload = { nome, descricao }
     this.setState({ loading: true })
+    const promise = this.isEdit
+      ? api.put(`/setor/${this.id}`, { nome, descricao, ativo })
+      : api.post('/setor', { nome, descricao })
 
-    if (this.isEdit) {
-      api.put(`/setor/${this.id}`, payload)
-        .then(() => {
-          toast.success('Setor atualizado!')
-          this.props.router.navigate('/setores')
-        })
-        .catch(err => {
-          toast.error(err.response?.data ?? 'Erro ao atualizar setor.')
-          this.setState({ loading: false })
-        })
-    } else {
-      // POST /api/setor
-      api.post('/setor', payload)
-        .then(() => {
-          toast.success('Setor cadastrado!')
-          this.props.router.navigate('/setores')
-        })
-        .catch(err => {
-          toast.error(err.response?.data ?? 'Erro ao cadastrar setor.')
-          this.setState({ loading: false })
-        })
-    }
+    promise
+      .then(() => {
+        toast.success(this.isEdit ? 'Setor atualizado!' : 'Setor cadastrado!')
+        this.props.router.navigate('/setores')
+      })
+      .catch(err => {
+        toast.error(err.response?.data ?? 'Erro ao salvar setor.')
+        this.setState({ loading: false })
+      })
   }
 
   render() {
-    const { nome, descricao, loading, loadingData } = this.state
-
+    const { nome, descricao, ativo, loading, loadingData } = this.state
     if (loadingData) return <LoadingSpinner />
 
     return (
       <div>
         <PageHeader
-          title={this.isEdit ? 'Editar Setor' : 'Novo Setor'} sub={this.isEdit ? 'Atualize as informações do setor.' : 'Cadastre um novo departamento na empresa.'}
+          title={this.isEdit ? 'Editar Setor' : 'Novo Setor'}
+          sub={this.isEdit ? 'Atualize as informações do setor.' : 'Cadastre um novo departamento na empresa.'}
           action={
             <Button variant="light" className="btn-ghost-rh"
               onClick={() => this.props.router.navigate('/setores')}>
-                <i className="bi bi-arrow-left" /> Voltar
+              <BiArrowBack className="me-1" /> Voltar
             </Button>
           }
         />
@@ -105,6 +97,18 @@ class SetorEdit extends Component {
                   style={{ resize: 'vertical' }} />
               </FormField>
 
+              {/* Campo ativo apenas na edição */}
+              {this.isEdit && (
+                <FormField label="Status" className="form-group-rh">
+                  <Form.Select className="form-control-rh" name="ativo"
+                    value={ativo ? 'true' : 'false'}
+                    onChange={e => this.setState({ ativo: e.target.value === 'true' })}>
+                    <option value="true">Ativo</option>
+                    <option value="false">Inativo</option>
+                  </Form.Select>
+                </FormField>
+              )}
+
               <div className="d-flex gap-3 justify-content-end mt-2">
                 <Button variant="light" className="btn-ghost-rh"
                   onClick={() => this.props.router.navigate('/setores')}>
@@ -113,7 +117,9 @@ class SetorEdit extends Component {
                 <Button type="submit" className="btn-primary-rh" disabled={loading}>
                   {loading
                     ? <><Spinner size="sm" className="me-2" />{this.isEdit ? 'Salvando...' : 'Cadastrando...'}</>
-                    : <><i className={`bi bi-${this.isEdit ? 'check-lg' : 'plus-lg'}`} />{this.isEdit ? 'Salvar alterações' : 'Cadastrar setor'}</>
+                    : this.isEdit
+                      ? <><BiCheck className="me-1" /> Salvar alterações</>
+                      : <><BiPlus className="me-1" /> Cadastrar setor</>
                   }
                 </Button>
               </div>

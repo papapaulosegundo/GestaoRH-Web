@@ -2,60 +2,40 @@ import { Component } from 'react'
 import { NavLink } from 'react-router-dom'
 import { withRouter } from '../../common/withRouter'
 import { withAuth } from '../../contexts/AuthContext'
+import {BiGrid, BiGroup, BiGitBranch, BiFileBlank, BiCloudUpload, BiBell, BiBarChartAlt2, BiBuilding, BiLogOut} from 'react-icons/bi'
+import { FaPencilAlt } from 'react-icons/fa'
 
 const NAV_ITEMS = [
   {
     section: 'Principal',
     items: [
-      { to: '/dashboard',    icon: 'bi-grid-1x2',     label: 'Dashboard' },
-      { to: '/funcionarios', icon: 'bi-people',        label: 'Funcionários' },
-      { to: '/setores',      icon: 'bi-diagram-3',     label: 'Setores' },
-    ],
+      { to: '/dashboard',    Icon: BiGrid,       label: 'Dashboard' },
+      { to: '/funcionarios', Icon: BiGroup,       label: 'Funcionários' },
+      { to: '/setores', Icon: BiGitBranch, label: 'Setores' },
+    ]
   },
   {
     section: 'Em breve',
     items: [
-      { icon: 'bi-file-earmark-text', label: 'Documentos',   disabled: true },
-      { icon: 'bi-pen',               label: 'Assinaturas',  disabled: true },
-      { icon: 'bi-cloud-upload',      label: 'Uploads',      disabled: true },
-      { icon: 'bi-bell',              label: 'Notificações', disabled: true },
-      { icon: 'bi-bar-chart-line',    label: 'Relatórios',   disabled: true },
-    ],
+      { Icon: BiFileBlank,    label: 'Documentos',   disabled: true },
+      { Icon: FaPencilAlt,    label: 'Assinaturas',  disabled: true },
+      { Icon: BiCloudUpload,  label: 'Uploads',      disabled: true },
+      { Icon: BiBell,         label: 'Notificações', disabled: true },
+      { Icon: BiBarChartAlt2, label: 'Relatórios',   disabled: true },
+    ]
   },
   {
     section: 'Configurações',
     items: [
-      { to: '/empresa', icon: 'bi-building', label: 'Perfil Empresa' },
-    ],
-  },
+      { to: '/empresa', Icon: BiBuilding, label: 'Perfil Empresa' },
+    ]
+  }
 ]
 
 class Sidebar extends Component {
   handleLogout = () => {
     this.props.auth.logout()
     this.props.router.navigate('/')
-  }
-
-  renderNavItem(item) {
-    if (item.disabled) {
-      return (
-        <div key={item.label} className="nav-item disabled">
-          <i className={`bi ${item.icon}`} />
-          {item.label}
-          <span className="nav-badge">Em breve</span>
-        </div>
-      )
-    }
-    return (
-      <NavLink
-        key={item.to}
-        to={item.to}
-        className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-      >
-        <i className={`bi ${item.icon}`} />
-        {item.label}
-      </NavLink>
-    )
   }
 
   render() {
@@ -66,7 +46,6 @@ class Sidebar extends Component {
 
     return (
       <aside className="sidebar">
-        {/* Logo */}
         <div className="sidebar-logo">
           <div className="logo-mark">📋</div>
           <div>
@@ -75,36 +54,43 @@ class Sidebar extends Component {
           </div>
         </div>
 
-        {/* Perfil da empresa */}
         <div className="sidebar-profile">
           <div className="avatar">
-            {empresa?.logoBase64
-              ? <img src={empresa.logoBase64} alt="Logo" />
-              : iniciais}
+            {empresa?.logoBase64 ? <img src={empresa.logoBase64} alt="Logo" /> : iniciais}
           </div>
           <div className="profile-info">
             <div className="name">{empresa?.razaoSocial ?? 'Empresa'}</div>
-            <div className="role">
-              {empresa?.responsavelNome} {empresa?.responsavelSobrenome}
-            </div>
+            <div className="role">{empresa?.responsavelNome} {empresa?.responsavelSobrenome}</div>
           </div>
         </div>
 
-        {/* Navegação */}
         <nav className="sidebar-nav">
           {NAV_ITEMS.map(section => (
             <div key={section.section}>
               <div className="nav-section-label">{section.section}</div>
-              {section.items.map(item => this.renderNavItem(item))}
+              {section.items.map(item => {
+                if (item.disabled) {
+                  return (
+                    <div key={item.label} className="nav-item disabled">
+                      <item.Icon size={16} /> {item.label}
+                      <span className="nav-badge">Em breve</span>
+                    </div>
+                  )
+                }
+                return (
+                  <NavLink key={item.to} to={item.to}
+                    className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+                    <item.Icon size={16} /> {item.label}
+                  </NavLink>
+                )
+              })}
             </div>
           ))}
         </nav>
 
-        {/* Footer logout */}
         <div className="sidebar-footer">
           <button className="nav-item" onClick={this.handleLogout} style={{ color: '#F87171' }}>
-            <i className="bi bi-box-arrow-left" style={{ color: '#F87171' }} />
-            Sair
+            <BiLogOut size={16} style={{ color: '#F87171' }} /> Sair
           </button>
         </div>
       </aside>

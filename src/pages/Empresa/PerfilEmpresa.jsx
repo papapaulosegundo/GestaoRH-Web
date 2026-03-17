@@ -1,17 +1,21 @@
 import { Component, createRef }                    from 'react'
-import { Row, Col, Card, Form, Button, Spinner }  from 'react-bootstrap'
-import { toast }                                  from 'react-toastify'
-import { withRouter }                             from '../../common/withRouter'
-import { withAuth }                               from '../../contexts/AuthContext'
-import { maskPhone }                              from '../../common/masks'
-import { PageHeader, InfoRow, FormField }         from '../../common/_components'
-import api                                        from '../../services/api'
+import { Row, Col, Card, Form, Button, Spinner }   from 'react-bootstrap'
+import { toast }                                   from 'react-toastify'
+import { withRouter }                              from '../../common/withRouter'
+import { withAuth }                                from '../../contexts/AuthContext'
+import { maskPhone }                               from '../../common/masks'
+import { PageHeader, InfoRow, FormField }          from '../../common/_components'
+import {
+  BiBuilding, BiBarcode, BiMapAlt, BiPhone,
+  BiUser, BiCalendar, BiCamera, BiCheck, BiPencil
+} from 'react-icons/bi'
+import api from '../../services/api'
 
 const INFO_ITEMS = [
-  { icon: 'bi-building',  label: 'Razão Social', key: 'razaoSocial' },
-  { icon: 'bi-upc',       label: 'CNPJ',         key: 'cnpj' },
-  { icon: 'bi-geo-alt',   label: 'Endereço',     key: 'endereco' },
-  { icon: 'bi-telephone', label: 'Telefone',     key: 'telefone' },
+  { Icon: BiBuilding, label: 'Razão Social', key: 'razaoSocial' },
+  { Icon: BiBarcode,  label: 'CNPJ',         key: 'cnpj' },
+  { Icon: BiMapAlt,   label: 'Endereço',     key: 'endereco' },
+  { Icon: BiPhone,    label: 'Telefone',     key: 'telefone' },
 ]
 
 class PerfilEmpresa extends Component {
@@ -21,21 +25,19 @@ class PerfilEmpresa extends Component {
     const e = props.auth.empresa
 
     this.state = {
-      editing:      false,
-      loading:      false,
-      logoPreview:  e?.logoBase64 ?? null,
-      logoBase64:   e?.logoBase64 ?? null,
-      razaoSocial:          e?.razaoSocial          ?? '',
-      endereco:             e?.endereco             ?? '',
-      telefone:             e?.telefone             ?? '',
-      responsavelNome:      e?.responsavelNome      ?? '',
+      editing:              false,
+      loading:              false,
+      logoPreview:          e?.logoBase64          ?? null,
+      logoBase64:           e?.logoBase64          ?? null,
+      razaoSocial:          e?.razaoSocial         ?? '',
+      endereco:             e?.endereco            ?? '',
+      telefone:             e?.telefone            ?? '',
+      responsavelNome:      e?.responsavelNome     ?? '',
       responsavelSobrenome: e?.responsavelSobrenome ?? '',
     }
   }
 
-  handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value })
-  }
+  handleChange = (e) => { this.setState({ [e.target.name]: e.target.value }) }
 
   handleLogo = (e) => {
     const file = e.target.files[0]
@@ -49,32 +51,23 @@ class PerfilEmpresa extends Component {
     const e = this.props.auth.empresa
     this.setState({
       editing: false,
-      logoPreview:  e?.logoBase64 ?? null,
-      logoBase64:   e?.logoBase64 ?? null,
-      razaoSocial:          e?.razaoSocial          ?? '',
-      endereco:             e?.endereco             ?? '',
-      telefone:             e?.telefone             ?? '',
-      responsavelNome:      e?.responsavelNome      ?? '',
+      logoPreview:          e?.logoBase64          ?? null,
+      logoBase64:           e?.logoBase64          ?? null,
+      razaoSocial:          e?.razaoSocial         ?? '',
+      endereco:             e?.endereco            ?? '',
+      telefone:             e?.telefone            ?? '',
+      responsavelNome:      e?.responsavelNome     ?? '',
       responsavelSobrenome: e?.responsavelSobrenome ?? '',
     })
   }
 
-  // PUT /api/empresa/{id}
   enviaRegistro = (e) => {
     e.preventDefault()
     const { razaoSocial, endereco, telefone, responsavelNome, responsavelSobrenome, logoBase64 } = this.state
     const { empresa, updateEmpresa } = this.props.auth
 
     this.setState({ loading: true })
-
-    api.put(`/empresa/${empresa.id}`, {
-      razaoSocial,
-      endereco,
-      telefone,
-      logoBase64,
-      responsavelNome,
-      responsavelSobrenome,
-    })
+    api.put(`/empresa/${empresa.id}`, { razaoSocial, endereco, telefone, logoBase64, responsavelNome, responsavelSobrenome })
       .then(res => {
         updateEmpresa(res.data)
         toast.success('Perfil atualizado com sucesso!')
@@ -113,11 +106,8 @@ class PerfilEmpresa extends Component {
               ? <img src={logoPreview} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               : iniciais}
             {editing && (
-              <div style={{
-                position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%',
-              }}>
-                <i className="bi bi-camera" style={{ color: '#fff', fontSize: 20 }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+                <BiCamera size={20} color="#fff" />
               </div>
             )}
           </div>
@@ -129,7 +119,6 @@ class PerfilEmpresa extends Component {
           <div style={{ fontSize: 13, color: 'var(--gray-500)', marginTop: 4 }}>
             CNPJ: <strong>{empresa?.cnpj}</strong>
           </div>
-
           <div style={{ marginTop: 20, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
             <div style={{ fontSize: 12, color: 'var(--gray-400)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.06em', marginBottom: 8 }}>
               Responsável de RH
@@ -138,7 +127,6 @@ class PerfilEmpresa extends Component {
               {empresa?.responsavelNome} {empresa?.responsavelSobrenome}
             </div>
           </div>
-
           {editing && (
             <div style={{ marginTop: 12, fontSize: 12, color: 'var(--primary)' }}>
               Clique na imagem para trocar o logo
@@ -154,19 +142,13 @@ class PerfilEmpresa extends Component {
     return (
       <div>
         {INFO_ITEMS.map(item => (
-          <InfoRow key={item.label} icon={item.icon} label={item.label} value={empresa?.[item.key]} />
+          <InfoRow key={item.label} icon={item.Icon} label={item.label} value={empresa?.[item.key]} />
         ))}
-        <InfoRow
-          icon="bi-person"
-          label="Responsável"
-          value={`${empresa?.responsavelNome ?? ''} ${empresa?.responsavelSobrenome ?? ''}`.trim()}
-        />
-        <InfoRow
-          icon="bi-calendar3"
-          label="Cadastrado em"
+        <InfoRow icon={BiUser} label="Responsável"
+          value={`${empresa?.responsavelNome ?? ''} ${empresa?.responsavelSobrenome ?? ''}`.trim()} />
+        <InfoRow icon={BiCalendar} label="Cadastrado em"
           value={empresa?.criadoEm ? new Date(empresa.criadoEm).toLocaleDateString('pt-BR') : null}
-          last
-        />
+          last />
       </div>
     )
   }
@@ -208,15 +190,12 @@ class PerfilEmpresa extends Component {
             </FormField>
           </Col>
         </Row>
-
         <div className="d-flex gap-3 justify-content-end mt-4">
-          <Button variant="light" className="btn-ghost-rh" onClick={this.handleCancel}>
-            Cancelar
-          </Button>
+          <Button variant="light" className="btn-ghost-rh" onClick={this.handleCancel}>Cancelar</Button>
           <Button type="submit" className="btn-primary-rh" disabled={loading}>
             {loading
               ? <><Spinner size="sm" className="me-2" />Salvando...</>
-              : <><i className="bi bi-check-lg" /> Salvar alterações</>
+              : <><BiCheck className="me-1" /> Salvar alterações</>
             }
           </Button>
         </div>
@@ -233,14 +212,12 @@ class PerfilEmpresa extends Component {
           sub="Informações e configurações da sua organização."
           action={!editing && (
             <Button className="btn-primary-rh" onClick={() => this.setState({ editing: true })}>
-              <i className="bi bi-pencil" /> Editar perfil
+              <BiPencil className="me-1" /> Editar perfil
             </Button>
           )}
         />
-
         <Row className="g-4">
           <Col lg={4}>{this.renderAvatar()}</Col>
-
           <Col lg={8}>
             <Card className="card-rh">
               <div className="card-rh-header">

@@ -1,12 +1,13 @@
-import { Component }                               from 'react'
+import { Component }                                    from 'react'
 import { Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap'
-import Select                                      from 'react-select'
-import { toast }                                   from 'react-toastify'
-import { withRouter }                              from '../../common/withRouter'
-import { PageHeader, LoadingSpinner, FormField }   from '../../common/_components'
+import Select                                           from 'react-select'
+import { toast }                                        from 'react-toastify'
+import { withRouter }                                   from '../../common/withRouter'
+import { PageHeader, LoadingSpinner, FormField }        from '../../common/_components'
+import { BiArrowBack, BiCheck, BiPlus, BiKey }          from 'react-icons/bi'
 import { GENERO_OPTIONS, TURNO_OPTIONS, selectStyles, setoresToOptions } from '../../common/utils'
-import { maskCpf, maskPhone }                      from '../../common/masks'
-import api                                         from '../../services/api'
+import { maskCpf, maskPhone }                           from '../../common/masks'
+import api                                              from '../../services/api'
 
 class FuncionarioEdit extends Component {
   state = {
@@ -14,10 +15,11 @@ class FuncionarioEdit extends Component {
     cpf:         '',
     telefone:    '',
     email:       '',
+    ativo:       true,
     generoSel:   null,
     turnoSel:    null,
     setorSel:    null,
-    setores:     [],       // options para o react-select
+    setores:     [],
     loading:     false,
     loadingData: false,
     senhaGerada: '',
@@ -27,12 +29,11 @@ class FuncionarioEdit extends Component {
   get id()     { return this.props.router.params.id }
 
   componentDidMount() {
-    // GET /api/setor — popula o select de setores
+    // Carrega apenas setores ATIVOS para o select (GET /api/setor)
     api.get('/setor')
       .then(res => this.setState({ setores: setoresToOptions(res.data) }))
       .catch(() => toast.error('Erro ao carregar setores.'))
 
-    // GET /api/funcionario/{id} — se for edição
     if (this.isEdit) {
       this.setState({ loadingData: true })
       api.get(`/funcionario/${this.id}`)
@@ -43,6 +44,7 @@ class FuncionarioEdit extends Component {
             cpf:         f.cpf,
             telefone:    f.telefone,
             email:       f.email,
+            ativo:       f.ativo,
             generoSel:   GENERO_OPTIONS.find(o => o.value === f.genero) ?? null,
             turnoSel:    TURNO_OPTIONS.find(o => o.value === f.turno)   ?? null,
             setorSel:    { value: f.setorId, label: f.nomeSetor },
@@ -56,32 +58,27 @@ class FuncionarioEdit extends Component {
     }
   }
 
-  handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value })
-  }
+  handleChange = (e) => { this.setState({ [e.target.name]: e.target.value }) }
 
-  // POST /api/funcionario/cadastrar  ou  PUT /api/funcionario/{id}
   enviaRegistro = (e) => {
     e.preventDefault()
-    const { nome, cpf, telefone, email, generoSel, turnoSel, setorSel } = this.state
+    const { nome, cpf, telefone, email, ativo, generoSel, turnoSel, setorSel } = this.state
 
     if (!generoSel) return toast.error('Selecione o gênero.')
     if (!turnoSel)  return toast.error('Selecione o turno.')
     if (!setorSel)  return toast.error('Selecione o setor.')
 
     const payload = {
-      nome,
-      telefone,
-      email,
+      nome, telefone, email,
       genero:  generoSel.value,
       turno:   turnoSel.value,
       setorId: setorSel.value,
+      ativo,   // enviado apenas na edição (ignorado no cadastro pelo back)
     }
 
     this.setState({ loading: true })
 
     if (this.isEdit) {
-      // PUT /api/funcionario/{id}
       api.put(`/funcionario/${this.id}`, payload)
         .then(() => {
           toast.success('Funcionário atualizado com sucesso!')
@@ -92,13 +89,12 @@ class FuncionarioEdit extends Component {
           this.setState({ loading: false })
         })
     } else {
-      // POST /api/funcionario/cadastrar
       api.post('/funcionario/cadastrar', { ...payload, cpf })
         .then(res => {
           toast.success('Funcionário cadastrado!')
           this.setState({
             senhaGerada: res.data.senhaTemporaria,
-            nome: '', cpf: '', telefone: '', email: '',
+            nome: '', cpf: '', telefone: '', email: '', ativo: true,
             generoSel: null, turnoSel: null, setorSel: null,
             loading: false,
           })
@@ -111,7 +107,7 @@ class FuncionarioEdit extends Component {
   }
 
   render() {
-    const { nome, cpf, telefone, email, generoSel, turnoSel, setorSel,
+    const { nome, cpf, telefone, email, ativo, generoSel, turnoSel, setorSel,
             setores, loading, loadingData, senhaGerada } = this.state
 
     if (loadingData) return <LoadingSpinner />
@@ -124,15 +120,14 @@ class FuncionarioEdit extends Component {
           action={
             <Button variant="light" className="btn-ghost-rh"
               onClick={() => this.props.router.navigate('/funcionarios')}>
-              <i className="bi bi-arrow-left" /> Voltar
+              <BiArrowBack className="me-1" /> Voltar
             </Button>
           }
         />
 
-        {/* Alerta com a senha temporária após cadastro */}
         {senhaGerada && (
           <Alert variant="success" className="mb-4 d-flex align-items-center gap-3">
-            <i className="bi bi-key-fill" style={{ fontSize: 24 }} />
+            <BiKey size={24} />
             <div>
               <strong>Funcionário cadastrado com sucesso!</strong>
               <div style={{ fontSize: 13 }}>
@@ -183,46 +178,47 @@ class FuncionarioEdit extends Component {
 
                 <Col md={4}>
                   <FormField label="Setor *">
-                    <Select
-                      options={setores}
-                      value={setorSel}
+                    <Select options={setores} value={setorSel}
                       onChange={v => this.setState({ setorSel: v })}
-                      placeholder="Buscar setor..."
-                      styles={selectStyles}
-                      noOptionsMessage={() => 'Nenhum setor encontrado'}
-                      isClearable
-                    />
+                      placeholder="Buscar setor..." styles={selectStyles}
+                      noOptionsMessage={() => 'Nenhum setor encontrado'} isClearable />
                   </FormField>
                 </Col>
 
                 <Col md={4}>
                   <FormField label="Turno *">
-                    <Select
-                      options={TURNO_OPTIONS}
-                      value={turnoSel}
+                    <Select options={TURNO_OPTIONS} value={turnoSel}
                       onChange={v => this.setState({ turnoSel: v })}
-                      placeholder="Selecione..."
-                      styles={selectStyles}
-                    />
+                      placeholder="Selecione..." styles={selectStyles} />
                   </FormField>
                 </Col>
 
                 <Col md={4}>
                   <FormField label="Gênero *">
-                    <Select
-                      options={GENERO_OPTIONS}
-                      value={generoSel}
+                    <Select options={GENERO_OPTIONS} value={generoSel}
                       onChange={v => this.setState({ generoSel: v })}
-                      placeholder="Selecione..."
-                      styles={selectStyles}
-                    />
+                      placeholder="Selecione..." styles={selectStyles} />
                   </FormField>
                 </Col>
+
+                {/* Campo status apenas na edição */}
+                {this.isEdit && (
+                  <Col md={4}>
+                    <FormField label="Status">
+                      <Form.Select className="form-control-rh" name="ativo"
+                        value={ativo ? 'true' : 'false'}
+                        onChange={e => this.setState({ ativo: e.target.value === 'true' })}>
+                        <option value="true">Ativo</option>
+                        <option value="false">Inativo</option>
+                      </Form.Select>
+                    </FormField>
+                  </Col>
+                )}
 
                 {!this.isEdit && (
                   <Col xs={12}>
                     <Alert variant="info" style={{ fontSize: 13 }}>
-                      <i className="bi bi-info-circle me-2" />
+                      <BiKey className="me-2" />
                       A senha temporária será gerada automaticamente com os 4 primeiros dígitos do CPF + <code>senha#</code>.
                       Ex: CPF <code>1234...</code> → senha <code>1234senha#</code>
                     </Alert>
@@ -238,7 +234,9 @@ class FuncionarioEdit extends Component {
                 <Button type="submit" className="btn-primary-rh" disabled={loading}>
                   {loading
                     ? <><Spinner size="sm" className="me-2" />{this.isEdit ? 'Salvando...' : 'Cadastrando...'}</>
-                    : <><i className={`bi bi-${this.isEdit ? 'check-lg' : 'plus-lg'}`} />{this.isEdit ? 'Salvar alterações' : 'Cadastrar funcionário'}</>
+                    : this.isEdit
+                      ? <><BiCheck className="me-1" /> Salvar alterações</>
+                      : <><BiPlus className="me-1" /> Cadastrar funcionário</>
                   }
                 </Button>
               </div>
