@@ -8,10 +8,10 @@ import { FaPencilAlt } from 'react-icons/fa'
 
 class DashboardFuncionario extends Component {
   state = {
-    totalEquipe:         0,
+    totalEquipe: 0,
     assinaturasPendentes: 0,
-    documentosRecebidos:  0,
-    loading:             true,
+    documentosRecebidos: 0,
+    loading: true,
   }
 
   componentDidMount() {

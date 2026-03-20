@@ -17,9 +17,9 @@ import Modelos       from './pages/Modelos/Modelos'
 import ModeloEdit    from './pages/Modelos/ModeloEdit'
 
 import LoginFuncionario     from './pages/Auth/LoginFuncionario'
-import DashboardFuncionario from './pages/Funcionario/DashboardFuncionario'
-import FuncionariosSetor    from './pages/Funcionario/FuncionariosSetor'
-import Documentos           from './pages/Funcionario/Documentos'
+import DashboardFuncionario from './pages/FuncionarioPerfil/DashboardFuncionario'
+import FuncionariosSetor    from './pages/FuncionarioPerfil/FuncionariosSetor'
+import Documentos           from './pages/FuncionarioPerfil/Documentos'
 
 function Loading() {
   return (
