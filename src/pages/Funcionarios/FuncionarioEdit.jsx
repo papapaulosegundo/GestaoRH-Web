@@ -16,6 +16,7 @@ class FuncionarioEdit extends Component {
     telefone:    '',
     email:       '',
     ativo:       true,
+    isChefe:     false,   // radio "É chefe de setor?"
     generoSel:   null,
     turnoSel:    null,
     setorSel:    null,
@@ -29,7 +30,6 @@ class FuncionarioEdit extends Component {
   get id()     { return this.props.router.params.id }
 
   componentDidMount() {
-    // Carrega apenas setores ATIVOS para o select (GET /api/setor)
     api.get('/setor')
       .then(res => this.setState({ setores: setoresToOptions(res.data) }))
       .catch(() => toast.error('Erro ao carregar setores.'))
@@ -45,6 +45,7 @@ class FuncionarioEdit extends Component {
             telefone:    f.telefone,
             email:       f.email,
             ativo:       f.ativo,
+            isChefe:     f.isChefe,
             generoSel:   GENERO_OPTIONS.find(o => o.value === f.genero) ?? null,
             turnoSel:    TURNO_OPTIONS.find(o => o.value === f.turno)   ?? null,
             setorSel:    { value: f.setorId, label: f.nomeSetor },
@@ -62,7 +63,7 @@ class FuncionarioEdit extends Component {
 
   enviaRegistro = (e) => {
     e.preventDefault()
-    const { nome, cpf, telefone, email, ativo, generoSel, turnoSel, setorSel } = this.state
+    const { nome, cpf, telefone, email, ativo, isChefe, generoSel, turnoSel, setorSel } = this.state
 
     if (!generoSel) return toast.error('Selecione o gênero.')
     if (!turnoSel)  return toast.error('Selecione o turno.')
@@ -73,7 +74,8 @@ class FuncionarioEdit extends Component {
       genero:  generoSel.value,
       turno:   turnoSel.value,
       setorId: setorSel.value,
-      ativo,   // enviado apenas na edição (ignorado no cadastro pelo back)
+      isChefe,
+      ativo,
     }
 
     this.setState({ loading: true })
@@ -94,7 +96,8 @@ class FuncionarioEdit extends Component {
           toast.success('Funcionário cadastrado!')
           this.setState({
             senhaGerada: res.data.senhaTemporaria,
-            nome: '', cpf: '', telefone: '', email: '', ativo: true,
+            nome: '', cpf: '', telefone: '', email: '',
+            ativo: true, isChefe: false,
             generoSel: null, turnoSel: null, setorSel: null,
             loading: false,
           })
@@ -107,7 +110,8 @@ class FuncionarioEdit extends Component {
   }
 
   render() {
-    const { nome, cpf, telefone, email, ativo, generoSel, turnoSel, setorSel,
+    const { nome, cpf, telefone, email, ativo, isChefe,
+            generoSel, turnoSel, setorSel,
             setores, loading, loadingData, senhaGerada } = this.state
 
     if (loadingData) return <LoadingSpinner />
@@ -136,6 +140,7 @@ class FuncionarioEdit extends Component {
                   {senhaGerada}
                 </code>
                 {' '}— Informe ao colaborador para o primeiro acesso.
+                {isChefe && <span className="badge-rh badge-info ms-2" style={{ fontSize: 11 }}>Chefe de Setor</span>}
               </div>
             </div>
           </Alert>
@@ -145,6 +150,7 @@ class FuncionarioEdit extends Component {
           <Card.Body className="card-rh-body">
             <Form onSubmit={this.enviaRegistro}>
               <Row className="g-4">
+                {/* Nome */}
                 <Col md={6}>
                   <FormField label="Nome completo *">
                     <Form.Control className="form-control-rh" placeholder="Nome do colaborador"
@@ -152,6 +158,7 @@ class FuncionarioEdit extends Component {
                   </FormField>
                 </Col>
 
+                {/* CPF */}
                 <Col md={6}>
                   <FormField label="CPF *" hint={this.isEdit ? 'CPF não pode ser alterado.' : undefined}>
                     <Form.Control className="form-control-rh" placeholder="000.000.000-00"
@@ -161,6 +168,7 @@ class FuncionarioEdit extends Component {
                   </FormField>
                 </Col>
 
+                {/* Email */}
                 <Col md={6}>
                   <FormField label="E-mail *">
                     <Form.Control type="email" className="form-control-rh" placeholder="email@empresa.com"
@@ -168,6 +176,7 @@ class FuncionarioEdit extends Component {
                   </FormField>
                 </Col>
 
+                {/* Telefone */}
                 <Col md={6}>
                   <FormField label="Telefone">
                     <Form.Control className="form-control-rh" placeholder="(00) 00000-0000"
@@ -176,6 +185,7 @@ class FuncionarioEdit extends Component {
                   </FormField>
                 </Col>
 
+                {/* Setor + É chefe? lado a lado */}
                 <Col md={4}>
                   <FormField label="Setor *">
                     <Select options={setores} value={setorSel}
@@ -185,6 +195,36 @@ class FuncionarioEdit extends Component {
                   </FormField>
                 </Col>
 
+                {/* Radio: É chefe de setor? */}
+                <Col md={4}>
+                  <FormField label="É chefe de setor?">
+                    <div className="d-flex gap-4 align-items-center" style={{ paddingTop: 10 }}>
+                      <Form.Check
+                        type="radio"
+                        id="chefe-nao"
+                        label="Não"
+                        name="isChefe"
+                        checked={!isChefe}
+                        onChange={() => this.setState({ isChefe: false })}
+                      />
+                      <Form.Check
+                        type="radio"
+                        id="chefe-sim"
+                        label="Sim"
+                        name="isChefe"
+                        checked={isChefe}
+                        onChange={() => this.setState({ isChefe: true })}
+                      />
+                    </div>
+                    {isChefe && (
+                      <div style={{ fontSize: 12, color: 'var(--primary)', marginTop: 6 }}>
+                        Este colaborador terá acesso à tela de equipe e dashboard do setor.
+                      </div>
+                    )}
+                  </FormField>
+                </Col>
+
+                {/* Turno */}
                 <Col md={4}>
                   <FormField label="Turno *">
                     <Select options={TURNO_OPTIONS} value={turnoSel}
@@ -193,6 +233,7 @@ class FuncionarioEdit extends Component {
                   </FormField>
                 </Col>
 
+                {/* Gênero */}
                 <Col md={4}>
                   <FormField label="Gênero *">
                     <Select options={GENERO_OPTIONS} value={generoSel}
@@ -201,7 +242,7 @@ class FuncionarioEdit extends Component {
                   </FormField>
                 </Col>
 
-                {/* Campo status apenas na edição */}
+                {/* Status (apenas edição) */}
                 {this.isEdit && (
                   <Col md={4}>
                     <FormField label="Status">
@@ -215,12 +256,13 @@ class FuncionarioEdit extends Component {
                   </Col>
                 )}
 
+                {/* Aviso senha */}
                 {!this.isEdit && (
                   <Col xs={12}>
                     <Alert variant="info" style={{ fontSize: 13 }}>
                       <BiKey className="me-2" />
-                      A senha temporária será gerada automaticamente com os 4 primeiros dígitos do CPF + <code>senha#</code>.
-                      Ex: CPF <code>1234...</code> → senha <code>1234senha#</code>
+                      Senha temporária: 4 primeiros dígitos do CPF + <code>senha#</code>.
+                      Ex: CPF <code>1234...</code> → <code>1234senha#</code>
                     </Alert>
                   </Col>
                 )}

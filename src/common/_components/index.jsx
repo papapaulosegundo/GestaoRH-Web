@@ -3,15 +3,15 @@ import {
   BiSearch, BiX, BiPlus, BiPencil, BiTrash, BiArrowBack,
   BiCheck, BiInfoCircle, BiCamera, BiImage, BiKey,
   BiBuilding, BiLock, BiPhone, BiMapAlt, BiUser, BiCalendar,
-  BiIdCard, BiGroup, BiDoorOpen, BiBarcode, BiGitBranch, BiGrid, BiRocket, BiLogOut
+  BiIdCard, BiGroup, BiDoorOpen, BiBarcode, BiGrid, BiRocket, BiLogOut
 } from 'react-icons/bi'
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 
 export {
   BiSearch, BiX, BiPlus, BiPencil, BiTrash, BiArrowBack,
   BiCheck, BiInfoCircle, BiCamera, BiImage, BiKey,
   BiBuilding, BiLock, BiPhone, BiMapAlt, BiUser, BiCalendar,
-  BiIdCard, BiGroup, BiDoorOpen, BiBarcode, BiGitBranch, BiGrid, BiRocket, BiLogOut, FaEye, FaEyeSlash
+  BiIdCard, BiGroup, BiDoorOpen, BiBarcode, BiGrid, BiRocket, BiLogOut
 }
 
 export function PageHeader({ title, sub, action }) {

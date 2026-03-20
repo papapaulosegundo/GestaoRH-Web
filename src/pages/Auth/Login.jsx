@@ -47,7 +47,7 @@ class AuthPage extends Component {
     this.setState({ loading: true })
     api.post('/empresa/login', { cnpj: loginCnpj, senha: loginSenha })
       .then(res => {
-        this.props.auth.login(res.data.empresa, res.data.jwt)
+        this.props.auth.loginEmpresa(res.data.empresa, res.data.jwt)
         toast.success('Bem-vindo de volta! 👋')
         this.props.router.navigate('/dashboard')
       })

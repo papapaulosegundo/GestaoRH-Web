@@ -2,15 +2,15 @@ import { Component } from 'react'
 import { Card } from 'react-bootstrap'
 import { withRouter } from '../../common/withRouter'
 import { PageHeader } from '../../common/_components'
-import { BiGroup, BiFileBlank, BiRocket, BiPencil, BiGitBranch } from 'react-icons/bi'
+import { BiGroup, BiFileBlank, BiRocket, BiGitBranch } from 'react-icons/bi'
 import api from '../../services/api'
 import { FaPencilAlt } from 'react-icons/fa'
 
 const STAT_CARDS = [
-  { key: 'funcionarios', Icon: BiGroup, label: 'Funcionários ativos', color: '#DBEAFE', iconColor: '#2563EB', link: '/funcionarios' },
-  { key: 'setores', Icon: BiGitBranch, label: 'Setores ativos', color: '#D1FAE5', iconColor: '#10B981', link: '/setores' },
-  { key: null, Icon: BiFileBlank, label: 'Documentos', color: '#FEF3C7', iconColor: '#F59E0B', disabled: true },
-  { key: null, Icon: FaPencilAlt, label: 'Assinaturas', color: '#EDE9FE', iconColor: '#7C3AED', disabled: true },
+  { key: 'funcionarios', Icon: BiGroup,      label: 'Funcionários ativos',  color: '#DBEAFE', iconColor: '#2563EB', link: '/funcionarios' },
+  { key: 'setores',      Icon: BiGitBranch,label: 'Setores cadastrados',  color: '#D1FAE5', iconColor: '#10B981', link: '/setores' },
+  { key: null,           Icon: BiFileBlank,  label: 'Documentos',           color: '#FEF3C7', iconColor: '#F59E0B', disabled: true },
+  { key: null,           Icon: FaPencilAlt,  label: 'Assinaturas',          color: '#EDE9FE', iconColor: '#7C3AED', disabled: true },
 ]
 
 class Dashboard extends Component {

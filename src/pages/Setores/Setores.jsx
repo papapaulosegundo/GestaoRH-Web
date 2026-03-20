@@ -3,7 +3,7 @@ import { Row, Col, Card, Table, Button, Form, Spinner } from 'react-bootstrap'
 import { toast } from 'react-toastify'
 import { withRouter } from '../../common/withRouter'
 import { PageHeader, EmptyState, ConfirmModal, TableFooter } from '../../common/_components'
-import { BiSearch, BiX, BiPlus, BiPencil, BiTrash, BiGitBranch, BiCheckCircle, BiXCircle } from 'react-icons/bi'
+import { BiSearch, BiX, BiPlus, BiPencil, BiTrash, BiCheckCircle, BiXCircle, BiGitBranch } from 'react-icons/bi'
 import api from '../../services/api'
 
 class Setores extends Component {
@@ -132,12 +132,8 @@ class Setores extends Component {
               <Table responsive className="table-rh mb-0">
                 <thead>
                   <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Descrição</th>
-                    <th>Status</th>
-                    <th>Criado em</th>
-                    <th style={{ width: 120 }}>Ações</th>
+                    <th>ID</th><th>Nome</th><th>Descrição</th>
+                    <th>Status</th><th>Criado em</th><th style={{ width: 120 }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>{this.renderRows(filtrados)}</tbody>

@@ -2,23 +2,31 @@ import { Component } from 'react'
 import { NavLink } from 'react-router-dom'
 import { withRouter } from '../../common/withRouter'
 import { withAuth } from '../../contexts/AuthContext'
-import {BiGrid, BiGroup, BiGitBranch, BiFileBlank, BiCloudUpload, BiBell, BiBarChartAlt2, BiBuilding, BiLogOut} from 'react-icons/bi'
-import { FaPencilAlt } from 'react-icons/fa'
+import {
+  BiGrid, BiGroup, BiGitBranch, BiFileBlank,
+  BiCloudUpload, BiBell, BiBarChartAlt2, BiBuilding, BiLogOut,
+  BiFile
+} from 'react-icons/bi'
 
 const NAV_ITEMS = [
   {
     section: 'Principal',
     items: [
-      { to: '/dashboard',    Icon: BiGrid,       label: 'Dashboard' },
-      { to: '/funcionarios', Icon: BiGroup,       label: 'Funcionários' },
-      { to: '/setores', Icon: BiGitBranch, label: 'Setores' },
+      { to: '/dashboard',    Icon: BiGrid,        label: 'Dashboard' },
+      { to: '/funcionarios', Icon: BiGroup,        label: 'Funcionários' },
+      { to: '/setores',      Icon: BiGitBranch,  label: 'Setores' },
+    ]
+  },
+  {
+    section: 'Documentos',
+    items: [
+      { to: '/modelos',      Icon: BiFile,         label: 'Modelos' },
+      { Icon: BiFileBlank,   label: 'Documentos',  disabled: true },
     ]
   },
   {
     section: 'Em breve',
     items: [
-      { Icon: BiFileBlank,    label: 'Documentos',   disabled: true },
-      { Icon: FaPencilAlt,    label: 'Assinaturas',  disabled: true },
       { Icon: BiCloudUpload,  label: 'Uploads',      disabled: true },
       { Icon: BiBell,         label: 'Notificações', disabled: true },
       { Icon: BiBarChartAlt2, label: 'Relatórios',   disabled: true },
