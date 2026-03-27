@@ -1,32 +1,78 @@
 import { Component }   from 'react'
-import { Tab, Tabs, Card, Form, Button, Row, Col, Spinner, Alert } from 'react-bootstrap'
+import { Tab, Tabs, Card, Form, Button, Row, Col, Spinner } from 'react-bootstrap'
 import { toast }        from 'react-toastify'
 import Select           from 'react-select'
 import { withRouter }   from '../../common/withRouter'
 import { PageHeader, LoadingSpinner, FormField } from '../../common/_components'
-import { BiArrowBack, BiCheck, BiPlus, BiSave } from 'react-icons/bi'
-import {CATEGORIA_OPTIONS, TIPO_USO_OPTIONS, selectStyles} from '../../common/modeloUtils'
+import { BiArrowBack, BiSave } from 'react-icons/bi'
+import { CATEGORIA_OPTIONS, TIPO_USO_OPTIONS, selectStyles } from '../../common/modeloUtils'
 import AbaConteudo    from './AbaConteudo'
 import AbaAssinaturas from './AbaAssinaturas'
 import AbaPreview     from './AbaPreview'
 import api from '../../services/api'
 
+// Converte os ids numéricos que vêm da API (int) para string,
+// porque o DTO do backend declara Id como string e o .NET
+// não consegue deserializar number → string automaticamente.
+function normalizarSecoes(secoes = []) {
+  return secoes.map((s, idx) => ({
+    ...s,
+    id:     String(s.id ?? `api_${idx}`),
+    campos: (s.campos ?? []).map((c, cidx) => ({
+      ...c,
+      id: String(c.id ?? `campo_${idx}_${cidx}`),
+    })),
+  }))
+}
+
+function normalizarAssinantes(assinantes = []) {
+  return assinantes.map((a, idx) => ({
+    ...a,
+    id: String(a.id ?? `assin_${idx}`),
+  }))
+}
+
+// Remove campos que o backend não precisa (ou que causam conflito)
+// e garante que os ids sejam sempre string no payload.
+function sanitizarPayload(secoes, assinantes) {
+  return {
+    secoes: secoes.map((s, idx) => ({
+      id:       String(s.id ?? ''),
+      titulo:   s.titulo   ?? '',
+      tipo:     s.tipo     ?? 'texto',
+      conteudo: s.conteudo ?? '',
+      ordem:    idx,
+      campos: (s.campos ?? []).map((c, cidx) => ({
+        id:          String(c.id ?? ''),
+        label:       c.label       ?? '',
+        tipoCampo:   c.tipo        ?? c.tipoCampo ?? 'texto_curto',   // normaliza nome do campo
+        obrigatorio: c.obrigatorio ?? true,
+        ordem:       cidx,
+      })),
+    })),
+    assinantes: assinantes.map((a, idx) => ({
+      id:          String(a.id ?? ''),
+      papel:       a.papel       ?? 'funcionario',
+      rotulo:      a.rotulo      ?? '',
+      obrigatorio: a.obrigatorio ?? true,
+      ordem:       idx + 1,
+      exibirPdf:   a.exibirPdf   ?? a.exibir_pdf ?? true,
+    })),
+  }
+}
+
 class ModeloEdit extends Component {
   state = {
-    // Dados gerais
-    nome:        '',
-    descricao:   '',
+    nome:         '',
+    descricao:    '',
     categoriaSel: null,
     tipoUsoSel:   null,
-    // Seções (conteúdo)
-    secoes:      [],
-    // Assinantes configurados
-    assinantes:  [],
-    // Controle
-    loading:     false,
-    loadingData: false,
-    tabAtiva:    'geral',
-    erros:       {},
+    secoes:       [],
+    assinantes:   [],
+    loading:      false,
+    loadingData:  false,
+    tabAtiva:     'geral',
+    erros:        {},
   }
 
   get isEdit() { return !!this.props.router.params.id }
@@ -42,10 +88,11 @@ class ModeloEdit extends Component {
           nome:         m.nome,
           descricao:    m.descricao ?? '',
           categoriaSel: CATEGORIA_OPTIONS.find(o => o.value === m.categoria) ?? null,
-          tipoUsoSel:   TIPO_USO_OPTIONS.find(o => o.value === m.tipoUso) ?? null,
-          secoes:       m.secoes ?? [],
-          assinantes:   m.assinantes ?? [],
-          loadingData:  false,
+          tipoUsoSel:   TIPO_USO_OPTIONS.find(o => o.value === m.tipoUso)   ?? null,
+          // FIX: normaliza ids de int → string para evitar erro 400 no PUT/POST
+          secoes:      normalizarSecoes(m.secoes),
+          assinantes:  normalizarAssinantes(m.assinantes),
+          loadingData: false,
         })
       })
       .catch(() => {
@@ -55,11 +102,11 @@ class ModeloEdit extends Component {
   }
 
   validar() {
-    const { nome, categoriaSel, tipoUsoSel, assinantes } = this.state
+    const { nome, categoriaSel, tipoUsoSel } = this.state
     const erros = {}
-    if (!nome.trim())      erros.nome      = 'Nome é obrigatório.'
-    if (!categoriaSel)     erros.categoria = 'Selecione uma categoria.'
-    if (!tipoUsoSel)       erros.tipoUso   = 'Selecione o tipo de uso.'
+    if (!nome.trim())  erros.nome      = 'Nome é obrigatório.'
+    if (!categoriaSel) erros.categoria = 'Selecione uma categoria.'
+    if (!tipoUsoSel)   erros.tipoUso   = 'Selecione o tipo de uso.'
     this.setState({ erros })
     return Object.keys(erros).length === 0
   }
@@ -72,16 +119,21 @@ class ModeloEdit extends Component {
     }
 
     const { nome, descricao, categoriaSel, tipoUsoSel, secoes, assinantes } = this.state
+
+    // FIX: sanitiza ids e campos antes de enviar
+    const { secoes: secoesSan, assinantes: assinantesSan } = sanitizarPayload(secoes, assinantes)
+
     const payload = {
-      nome:      nome.trim(),
-      descricao: descricao.trim(),
-      categoria: categoriaSel.value,
-      tipoUso:   tipoUsoSel.value,
-      secoes,
-      assinantes,
+      nome:       nome.trim(),
+      descricao:  descricao.trim(),
+      categoria:  categoriaSel.value,
+      tipoUso:    tipoUsoSel.value,
+      secoes:     secoesSan,
+      assinantes: assinantesSan,
     }
 
     this.setState({ loading: true })
+
     const req = this.isEdit
       ? api.put(`/modelo/${this.id}`, payload)
       : api.post('/modelo', payload)
@@ -100,7 +152,7 @@ class ModeloEdit extends Component {
   render() {
     const {
       nome, descricao, categoriaSel, tipoUsoSel,
-      secoes, assinantes, loading, loadingData, tabAtiva, erros
+      secoes, assinantes, loading, loadingData, tabAtiva, erros,
     } = this.state
 
     if (loadingData) return <LoadingSpinner />
@@ -196,7 +248,6 @@ class ModeloEdit extends Component {
             </Tab>
           </Tabs>
 
-          {/* Botão salvar fixo */}
           <div className="d-flex justify-content-end gap-3 mt-3">
             <Button variant="light" className="btn-ghost-rh"
               onClick={() => this.props.router.navigate('/modelos')}>

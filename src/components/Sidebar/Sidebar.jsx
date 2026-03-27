@@ -3,9 +3,8 @@ import { NavLink } from 'react-router-dom'
 import { withRouter } from '../../common/withRouter'
 import { withAuth } from '../../contexts/AuthContext'
 import {
-  BiGrid, BiGroup, BiGitBranch, BiFileBlank,
-  BiCloudUpload, BiBell, BiBarChartAlt2, BiBuilding, BiLogOut,
-  BiFile
+  BiGrid, BiGroup, BiGitBranch, BiFile, BiFileBlank,
+  BiCloudUpload, BiBell, BiBarChartAlt2, BiBuilding, BiLogOut
 } from 'react-icons/bi'
 
 const NAV_ITEMS = [
@@ -14,14 +13,14 @@ const NAV_ITEMS = [
     items: [
       { to: '/dashboard',    Icon: BiGrid,        label: 'Dashboard' },
       { to: '/funcionarios', Icon: BiGroup,        label: 'Funcionários' },
-      { to: '/setores',      Icon: BiGitBranch,  label: 'Setores' },
+      { to: '/setores',      Icon: BiGitBranch,   label: 'Setores' },
     ]
   },
   {
     section: 'Documentos',
     items: [
-      { to: '/modelos',      Icon: BiFile,         label: 'Modelos' },
-      { Icon: BiFileBlank,   label: 'Documentos',  disabled: true },
+      { to: '/modelos',     Icon: BiFile,     label: 'Modelos' },
+      { to: '/documentos',  Icon: BiFileBlank, label: 'Documentos' },
     ]
   },
   {
